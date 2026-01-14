@@ -1,0 +1,78 @@
+<!-- File: register.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrasi - Sistem Absensi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js" defer></script>
+    <script src="js/auth.js" defer></script>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2>Registrasi Karyawan Baru</h2>
+                <p>Isi formulir di bawah untuk mendaftar</p>
+            </div>
+            
+            <form id="registerForm" onsubmit="registerUser(event)">
+                <div class="form-group">
+                    <label for="nip">NIP</label>
+                    <input type="text" id="nip" required 
+                           placeholder="Masukkan NIP" minlength="4">
+                </div>
+                
+                <div class="form-group">
+                    <label for="nama">Nama Lengkap</label>
+                    <input type="text" id="nama" required 
+                           placeholder="Masukkan nama lengkap">
+                </div>
+                
+                <div class="form-group">
+                    <label for="jabatan">Jabatan</label>
+                    <input type="text" id="jabatan" required 
+                           placeholder="Masukkan jabatan">
+                </div>
+                
+                <div class="form-group">
+                    <label for="alamat">Alamat</label>
+                    <textarea id="alamat" required 
+                              placeholder="Masukkan alamat lengkap" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="noWhatsapp">Nomor WhatsApp</label>
+                    <input type="tel" id="noWhatsapp" required 
+                           placeholder="Contoh: 081234567890">
+                </div>
+                
+                <div class="form-group">
+                    <label for="wilayah">Wilayah Area</label>
+                    <input type="text" id="wilayah" required 
+                           placeholder="Contoh: Jakarta Pusat">
+                </div>
+                
+                <div class="password-info">
+                    <p><strong>Password akan dibuat otomatis:</strong><br>
+                    4 digit terakhir NIP + 3 huruf terakhir nama (kapital)</p>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">
+                        Daftar Sekarang
+                    </button>
+                </div>
+                
+                <div class="auth-footer">
+                    <p>Sudah punya akun? <a href="login.html">Login disini</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
