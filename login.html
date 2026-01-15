@@ -1,4 +1,4 @@
-<!-- File: login.html (Updated) -->
+<!-- File: login.html -->
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -18,36 +18,21 @@
             <div class="auth-header">
                 <h2>Login Sistem Absensi</h2>
                 <p>Masukkan email dan password Anda</p>
-                
-                <!-- Informasi Login Admin -->
-                <div class="admin-info" style="background: #f0f7ff; padding: 10px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-                    <h4 style="margin: 0 0 5px 0; color: #667eea;">Login Admin:</h4>
-                    <p style="margin: 0; font-size: 0.9rem;">
-                        Email: <strong>admin@absensi.com</strong><br>
-                        Password: <strong>Admin123!</strong>
-                    </p>
-                </div>
             </div>
             
             <form id="loginForm" onsubmit="loginUser(event)">
                 <div class="form-group">
                     <label for="email">Email</label>
                     <input type="email" id="email" required 
-                           placeholder="Masukkan email">
-                    <small>
-                        Untuk Admin: admin@absensi.com<br>
-                        Untuk User: NIP@absensi.com (contoh: 1234@absensi.com)
-                    </small>
+                           placeholder="Masukkan email (NIP@absensi.com)">
+                    <small>Format email: NIP@absensi.com</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" required 
                            placeholder="Masukkan password">
-                    <small>
-                        Admin: Admin123!<br>
-                        User: 4 digit terakhir NIP + 3 huruf terakhir nama (kapital)
-                    </small>
+                    <small>Password default: 4 digit terakhir NIP + 3 huruf terakhir nama (kapital)</small>
                 </div>
                 
                 <div class="form-group">
