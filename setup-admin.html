@@ -7,104 +7,478 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="js/firebase-config.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
+            margin: 0;
+        }
+        
+        .setup-container {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .setup-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .setup-header h1 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .setup-header p {
+            color: #666;
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 1.5rem;
         }
         
-        label {
+        .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
         }
         
-        input {
+        .form-group input {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
         }
         
-        button {
-            padding: 10px 20px;
-            background: #4CAF50;
-            color: white;
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
             border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
         }
         
-        button:hover {
-            background: #45a049;
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            margin-top: 1rem;
+            width: 100%;
         }
         
         .result {
-            margin-top: 20px;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 5px;
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+            display: block;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+            display: block;
+        }
+        
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+            display: block;
+        }
+        
+        .admin-credentials {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border-left: 4px solid #667eea;
+        }
+        
+        .admin-credentials h4 {
+            margin: 0 0 0.5rem 0;
+            color: #667eea;
+        }
+        
+        .firebase-config {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #ffc107;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid #28a745;
+        }
+        
+        .step h3 {
+            margin: 0 0 0.5rem 0;
+            color: #28a745;
+        }
+        
+        .status-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-check span {
+            font-size: 1.2rem;
+        }
+        
+        .check-success {
+            color: #28a745;
+        }
+        
+        .check-error {
+            color: #dc3545;
+        }
+        
+        .check-warning {
+            color: #ffc107;
         }
     </style>
 </head>
 <body>
-    <h1>Setup Admin Pertama</h1>
-    <p>Halaman ini untuk membuat admin pertama jika belum ada.</p>
-    
-    <div id="setupForm">
-        <div class="form-group">
-            <label for="adminNip">NIP Admin:</label>
-            <input type="text" id="adminNip" value="ADMIN001">
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1>🚀 Setup Admin Pertama</h1>
+            <p>Setup admin pertama untuk Sistem Absensi Karyawan</p>
         </div>
         
-        <div class="form-group">
-            <label for="adminNama">Nama Admin:</label>
-            <input type="text" id="adminNama" value="Super Administrator">
+        <div class="step">
+            <h3>📋 Langkah 1: Konfigurasi Firebase</h3>
+            <div class="status-check">
+                <span id="firebaseConfigStatus">❓</span>
+                <span>Firebase Configuration</span>
+            </div>
+            <div class="status-check">
+                <span id="firestoreStatus">❓</span>
+                <span>Firestore Connection</span>
+            </div>
+            <div class="status-check">
+                <span id="authStatus">❓</span>
+                <span>Authentication Service</span>
+            </div>
         </div>
         
-        <div class="form-group">
-            <label for="adminPassword">Password:</label>
-            <input type="password" id="adminPassword" value="Admin123!">
+        <div id="firebaseConfigSection" class="firebase-config" style="display: none;">
+            <h4>⚠️ Konfigurasi Firebase Ditemukan Masalah</h4>
+            <p>Pastikan file <code>js/firebase-config.js</code> berisi konfigurasi yang benar:</p>
+            <pre id="configExample">
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyB...",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "1:1234567890:web:abcd..."
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Initialize services
+const auth = firebase.auth();
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+// Export untuk penggunaan global
+window.auth = auth;
+window.db = db;
+window.storage = storage;
+            </pre>
         </div>
         
-        <button onclick="createAdmin()">Buat Admin</button>
+        <div id="setupForm">
+            <div class="step">
+                <h3>👑 Langkah 2: Buat Admin Pertama</h3>
+                <p>Isi data untuk admin pertama sistem</p>
+            </div>
+            
+            <form onsubmit="event.preventDefault(); createAdmin();">
+                <div class="form-group">
+                    <label for="adminNip">NIP Admin *</label>
+                    <input type="text" id="adminNip" value="ADMIN001" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminNama">Nama Lengkap *</label>
+                    <input type="text" id="adminNama" value="Super Administrator" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">Password *</label>
+                    <input type="password" id="adminPassword" value="Admin123!" required>
+                    <small>Minimal 6 karakter</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Konfirmasi Password *</label>
+                    <input type="password" id="confirmPassword" value="Admin123!" required>
+                </div>
+                
+                <div class="admin-credentials">
+                    <h4>📧 Email akan dibuat otomatis:</h4>
+                    <p><strong id="autoEmail">ADMIN001@absensi.com</strong></p>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="createAdminBtn">
+                    Buat Admin Pertama
+                </button>
+            </form>
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <div id="successSection" style="display: none;">
+            <div class="result success">
+                <h3>✅ Admin Berhasil Dibuat!</h3>
+                <div id="adminDetails"></div>
+                <p>Silakan lanjutkan ke halaman login</p>
+            </div>
+            <a href="login.html" class="btn btn-secondary">Lanjut ke Halaman Login</a>
+        </div>
+        
+        <div id="existingAdminSection" style="display: none;">
+            <div class="result info">
+                <h3>ℹ️ Admin Sudah Ada</h3>
+                <p>Sistem sudah memiliki admin. Silakan login melalui halaman login.</p>
+            </div>
+            <a href="login.html" class="btn btn-primary">Ke Halaman Login</a>
+            <a href="index.html" class="btn btn-secondary" style="margin-top: 1rem;">Ke Beranda</a>
+        </div>
     </div>
-    
-    <div id="result" class="result"></div>
-    
+
     <script>
-        async function createAdmin() {
-            const nip = document.getElementById('adminNip').value;
-            const nama = document.getElementById('adminNama').value;
-            const password = document.getElementById('adminPassword').value;
-            const email = `${nip}@absensi.com`;
+        // Firebase Configuration (hardcoded untuk testing)
+        // Ganti dengan konfigurasi project Anda
+        const firebaseConfig = {
+  apiKey: "AIzaSyBZaCqhsLGzNjLjgZCsbl43cjazsRR8Mx8",
+  authDomain: "absensi-karyawan-e6d95.firebaseapp.com",
+  projectId: "absensi-karyawan-e6d95",
+  storageBucket: "absensi-karyawan-e6d95.firebasestorage.app",
+  messagingSenderId: "498370825132",
+  appId: "1:498370825132:web:c3890129ea106fbca58809",
+  measurementId: "G-J02NSH9MMQ"
+};
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log("✅ Firebase initialized successfully");
             
-            if (!nip || !nama || !password) {
-                showResult('Harap isi semua field!', 'error');
-                return;
+            // Initialize services
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            const storage = firebase.storage();
+            
+            // Set global variables
+            window.auth = auth;
+            window.db = db;
+            window.storage = storage;
+            
+            document.getElementById('firebaseConfigStatus').textContent = '✅';
+            document.getElementById('firebaseConfigStatus').className = 'check-success';
+            document.getElementById('firebaseConfigSection').style.display = 'none';
+        } catch (error) {
+            console.error("❌ Firebase initialization error:", error);
+            document.getElementById('firebaseConfigStatus').textContent = '❌';
+            document.getElementById('firebaseConfigStatus').className = 'check-error';
+            document.getElementById('firebaseConfigSection').style.display = 'block';
+        }
+
+        // Auto-update email based on NIP
+        document.getElementById('adminNip').addEventListener('input', function() {
+            const nip = this.value;
+            if (nip) {
+                document.getElementById('autoEmail').textContent = `${nip}@absensi.com`;
             }
-            
+        });
+
+        // Test Firebase connections
+        async function testFirebaseConnections() {
             try {
-                // Cek apakah sudah ada admin
-                const existingAdmin = await db.collection('users')
-                    .where('nip', '==', nip)
+                // Test Firestore
+                const testDoc = await db.collection('_test').doc('connection').get();
+                console.log("✅ Firestore connection test passed");
+                document.getElementById('firestoreStatus').textContent = '✅';
+                document.getElementById('firestoreStatus').className = 'check-success';
+            } catch (error) {
+                console.error("❌ Firestore connection error:", error);
+                document.getElementById('firestoreStatus').textContent = '❌';
+                document.getElementById('firestoreStatus').className = 'check-error';
+            }
+
+            try {
+                // Test Auth
+                // Just check if auth object exists
+                if (auth) {
+                    console.log("✅ Auth service available");
+                    document.getElementById('authStatus').textContent = '✅';
+                    document.getElementById('authStatus').className = 'check-success';
+                }
+            } catch (error) {
+                console.error("❌ Auth service error:", error);
+                document.getElementById('authStatus').textContent = '❌';
+                document.getElementById('authStatus').className = 'check-error';
+            }
+        }
+
+        // Check if admin already exists
+        async function checkExistingAdmin() {
+            try {
+                console.log("🔍 Checking for existing admin...");
+                
+                // Try to access Firestore
+                const adminSnapshot = await db.collection('users')
+                    .where('role', '==', 'admin')
                     .limit(1)
                     .get();
                 
-                if (!existingAdmin.empty) {
-                    showResult('Admin dengan NIP ini sudah ada!', 'error');
-                    return;
+                console.log("📊 Admin check result:", adminSnapshot.empty ? "No admin found" : "Admin exists");
+                
+                if (!adminSnapshot.empty) {
+                    // Admin already exists
+                    document.getElementById('setupForm').style.display = 'none';
+                    document.getElementById('existingAdminSection').style.display = 'block';
+                    document.getElementById('result').innerHTML = '';
+                    return true;
                 }
                 
-                // Buat user di Firebase Auth
+                return false;
+                
+            } catch (error) {
+                console.error("❌ Error checking admin:", error);
+                
+                if (error.code === 'failed-precondition') {
+                    // Firestore not initialized properly
+                    showError('Firestore belum diaktifkan. Aktifkan Firestore di Firebase Console.');
+                } else if (error.code === 'permission-denied') {
+                    // Permission denied - show instructions
+                    showError(`
+                        <h4>❌ Permission Denied</h4>
+                        <p>Firestore Rules tidak mengizinkan akses. Ikuti langkah:</p>
+                        <ol>
+                            <li>Buka <strong>Firebase Console</strong></li>
+                            <li>Pilih project Anda</li>
+                            <li>Buka <strong>Firestore Database</strong></li>
+                            <li>Klik tab <strong>Rules</strong></li>
+                            <li>Ganti rules dengan:</li>
+                        </ol>
+                        <pre style="background: #fff; padding: 10px; border-radius: 5px;">
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+                        </pre>
+                        <li>Klik <strong>Publish</strong></li>
+                        <li>Refresh halaman ini</li>
+                    `);
+                } else {
+                    showError('Error: ' + error.message);
+                }
+                
+                return false;
+            }
+        }
+
+        // Create admin function
+        async function createAdmin() {
+            const nip = document.getElementById('adminNip').value.trim();
+            const nama = document.getElementById('adminNama').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validation
+            if (!nip || !nama || !password) {
+                showError('Harap isi semua field!');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showError('Password minimal 6 karakter!');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showError('Password dan konfirmasi password tidak sama!');
+                return;
+            }
+            
+            const email = `${nip}@absensi.com`;
+            
+            // Disable button and show loading
+            const btn = document.getElementById('createAdminBtn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Membuat Admin...';
+            btn.disabled = true;
+            
+            try {
+                console.log("🔄 Creating admin user...");
+                
+                // Step 1: Create user in Firebase Auth
+                console.log("Step 1: Creating Firebase Auth user...");
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 const user = userCredential.user;
+                console.log("✅ Auth user created:", user.uid);
                 
-                // Simpan data admin di Firestore
+                // Step 2: Save user data to Firestore
+                console.log("Step 2: Saving to Firestore...");
                 await db.collection('users').doc(user.uid).set({
                     uid: user.uid,
                     nip: nip,
@@ -116,63 +490,172 @@
                     email: email,
                     role: 'admin',
                     passwordDisplay: password,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    isSuperAdmin: true
                 });
+                console.log("✅ Firestore data saved");
                 
-                // Update display name
+                // Step 3: Update display name
+                console.log("Step 3: Updating profile...");
                 await user.updateProfile({
                     displayName: nama
                 });
+                console.log("✅ Profile updated");
                 
-                showResult(`
-                    <h3>Admin berhasil dibuat!</h3>
-                    <p><strong>Email:</strong> ${email}</p>
-                    <p><strong>Password:</strong> ${password}</p>
-                    <p><strong>NIP:</strong> ${nip}</p>
-                    <p><strong>Nama:</strong> ${nama}</p>
-                    <br>
-                    <a href="login.html" style="color: blue; text-decoration: underline;">
-                        Klik disini untuk login
-                    </a>
-                `, 'success');
+                // Success
+                console.log("🎉 Admin created successfully!");
+                
+                // Show success message
+                document.getElementById('setupForm').style.display = 'none';
+                document.getElementById('successSection').style.display = 'block';
+                document.getElementById('adminDetails').innerHTML = `
+                    <div class="admin-credentials">
+                        <h4>👤 Detail Admin:</h4>
+                        <p><strong>NIP:</strong> ${nip}</p>
+                        <p><strong>Nama:</strong> ${nama}</p>
+                        <p><strong>Email:</strong> ${email}</p>
+                        <p><strong>Password:</strong> ${password}</p>
+                        <p><strong>Role:</strong> Super Admin</p>
+                    </div>
+                    <p><strong>⚠️ Simpan informasi ini dengan aman!</strong></p>
+                `;
+                
+                // Auto copy to clipboard
+                const credentials = `Email: ${email}\nPassword: ${password}`;
+                navigator.clipboard.writeText(credentials)
+                    .then(() => {
+                        console.log("Credentials copied to clipboard");
+                        const details = document.getElementById('adminDetails');
+                        details.innerHTML += '<p style="color: #28a745;">✓ Credentials telah disalin ke clipboard</p>';
+                    })
+                    .catch(err => {
+                        console.log("Could not copy: ", err);
+                    });
                 
             } catch (error) {
-                console.error('Error creating admin:', error);
-                showResult(`Error: ${error.message}`, 'error');
-            }
-        }
-        
-        function showResult(message, type) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = message;
-            resultDiv.style.color = type === 'error' ? 'red' : 'green';
-        }
-        
-        // Cek apakah sudah ada admin
-        async function checkExistingAdmin() {
-            try {
-                const adminSnapshot = await db.collection('users')
-                    .where('role', '==', 'admin')
-                    .limit(1)
-                    .get();
+                console.error("❌ Error creating admin:", error);
                 
-                if (!adminSnapshot.empty) {
-                    document.getElementById('setupForm').style.display = 'none';
-                    showResult(`
-                        <h3>Admin sudah ada!</h3>
-                        <p>Sistem sudah memiliki admin. Silakan login melalui halaman login.</p>
-                        <a href="login.html" style="color: blue; text-decoration: underline;">
-                            Ke Halaman Login
-                        </a>
-                    `, 'info');
+                // Handle specific errors
+                let errorMessage = 'Gagal membuat admin: ';
+                
+                switch(error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage = 'Email/NIP sudah digunakan!';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Format email tidak valid!';
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorMessage = 'Email/password login tidak diaktifkan di Firebase Console!';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage = 'Password terlalu lemah! Minimal 6 karakter.';
+                        break;
+                    case 'permission-denied':
+                        errorMessage = 'Permission denied! Periksa Firestore Rules.';
+                        break;
+                    default:
+                        errorMessage += error.message;
                 }
-            } catch (error) {
-                console.error('Error checking admin:', error);
+                
+                showError(errorMessage);
+                
+            } finally {
+                // Re-enable button
+                btn.textContent = originalText;
+                btn.disabled = false;
             }
         }
-        
-        // Jalankan saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', checkExistingAdmin);
+
+        // Helper functions
+        function showError(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result error';
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+            
+            // Scroll to error
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showSuccess(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result success';
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+
+        function showInfo(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result info';
+            resultDiv.innerHTML = message;
+            resultDiv.style.display = 'block';
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log("🚀 Setup page loaded");
+            
+            // Test Firebase connections
+            await testFirebaseConnections();
+            
+            // Check if admin exists
+            const hasAdmin = await checkExistingAdmin();
+            
+            if (!hasAdmin) {
+                // Auto-test Firestore write permission
+                try {
+                    console.log("🔧 Testing Firestore write permission...");
+                    
+                    // Try to write a test document
+                    const testRef = db.collection('_test').doc('setup_test');
+                    await testRef.set({
+                        test: true,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    console.log("✅ Firestore write test passed");
+                    
+                    // Clean up test document
+                    await testRef.delete();
+                    
+                } catch (error) {
+                    console.error("❌ Firestore write test failed:", error);
+                    
+                    if (error.code === 'permission-denied') {
+                        showError(`
+                            <h4>⚠️ Firestore Rules Perlu Diperbaiki</h4>
+                            <p>Firestore Rules tidak mengizinkan akses tulis. Ikuti langkah:</p>
+                            <ol>
+                                <li>Buka <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a></li>
+                                <li>Pilih project <strong>${firebaseConfig.projectId}</strong></li>
+                                <li>Buka <strong>Firestore Database</strong> → tab <strong>Rules</strong></li>
+                                <li>Ganti rules dengan:</li>
+                            </ol>
+                            <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;">
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+                            </pre>
+                            <li>Klik <strong>Publish</strong></li>
+                                <li><button onclick="location.reload()" class="btn" style="background: #667eea; color: white; padding: 5px 15px; border: none; border-radius: 5px; cursor: pointer;">Refresh Halaman</button></li>
+                            </ol>
+                            <p><small><strong>Note:</strong> Rules ini hanya untuk development. Setelah setup selesai, ganti dengan rules yang lebih ketat.</small></p>
+                        `);
+                    }
+                }
+            }
+        });
+
+        // Manual refresh function
+        window.refreshPage = function() {
+            location.reload();
+        };
     </script>
 </body>
 </html>
