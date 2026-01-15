@@ -3,50 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setup Admin</title>
+    <title>Setup Admin - Sistem Absensi</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <script src="js/firebase-config.js" defer></script>
+    <script src="js/firebase-config.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h2>Setup Admin Pertama</h2>
-    <button onclick="createAdmin()">Buat Admin</button>
+    <h1>Setup Admin Pertama</h1>
+    <p>Halaman ini untuk membuat admin pertama jika belum ada.</p>
+    
+    <div id="setupForm">
+        <div class="form-group">
+            <label for="adminNip">NIP Admin:</label>
+            <input type="text" id="adminNip" value="ADMIN001">
+        </div>
+        
+        <div class="form-group">
+            <label for="adminNama">Nama Admin:</label>
+            <input type="text" id="adminNama" value="Super Administrator">
+        </div>
+        
+        <div class="form-group">
+            <label for="adminPassword">Password:</label>
+            <input type="password" id="adminPassword" value="Admin123!">
+        </div>
+        
+        <button onclick="createAdmin()">Buat Admin</button>
+    </div>
+    
+    <div id="result" class="result"></div>
     
     <script>
         async function createAdmin() {
+            const nip = document.getElementById('adminNip').value;
+            const nama = document.getElementById('adminNama').value;
+            const password = document.getElementById('adminPassword').value;
+            const email = `${nip}@absensi.com`;
+            
+            if (!nip || !nama || !password) {
+                showResult('Harap isi semua field!', 'error');
+                return;
+            }
+            
             try {
-                // Buat user admin di Authentication
-                const userCredential = await auth.createUserWithEmailAndPassword(
-                    'admin@absensi.com', 
-                    'Admin123!'
-                );
+                // Cek apakah sudah ada admin
+                const existingAdmin = await db.collection('users')
+                    .where('nip', '==', nip)
+                    .limit(1)
+                    .get();
                 
-                const adminUser = userCredential.user;
+                if (!existingAdmin.empty) {
+                    showResult('Admin dengan NIP ini sudah ada!', 'error');
+                    return;
+                }
+                
+                // Buat user di Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
                 
                 // Simpan data admin di Firestore
-                await db.collection('users').doc(adminUser.uid).set({
-                    uid: adminUser.uid,
-                    nip: 'ADMIN001',
-                    nama: 'Super Administrator',
+                await db.collection('users').doc(user.uid).set({
+                    uid: user.uid,
+                    nip: nip,
+                    nama: nama,
                     jabatan: 'Administrator',
                     alamat: 'Kantor Pusat',
                     noWhatsapp: '081234567890',
                     wilayah: 'Pusat',
-                    email: 'admin@absensi.com',
+                    email: email,
                     role: 'admin',
-                    passwordDisplay: 'Admin123!',
+                    passwordDisplay: password,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                alert('Admin berhasil dibuat!\nEmail: admin@absensi.com\nPassword: Admin123!');
-                window.location.href = 'login.html';
+                // Update display name
+                await user.updateProfile({
+                    displayName: nama
+                });
+                
+                showResult(`
+                    <h3>Admin berhasil dibuat!</h3>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Password:</strong> ${password}</p>
+                    <p><strong>NIP:</strong> ${nip}</p>
+                    <p><strong>Nama:</strong> ${nama}</p>
+                    <br>
+                    <a href="login.html" style="color: blue; text-decoration: underline;">
+                        Klik disini untuk login
+                    </a>
+                `, 'success');
                 
             } catch (error) {
                 console.error('Error creating admin:', error);
-                alert('Error: ' + error.message);
+                showResult(`Error: ${error.message}`, 'error');
             }
         }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.style.color = type === 'error' ? 'red' : 'green';
+        }
+        
+        // Cek apakah sudah ada admin
+        async function checkExistingAdmin() {
+            try {
+                const adminSnapshot = await db.collection('users')
+                    .where('role', '==', 'admin')
+                    .limit(1)
+                    .get();
+                
+                if (!adminSnapshot.empty) {
+                    document.getElementById('setupForm').style.display = 'none';
+                    showResult(`
+                        <h3>Admin sudah ada!</h3>
+                        <p>Sistem sudah memiliki admin. Silakan login melalui halaman login.</p>
+                        <a href="login.html" style="color: blue; text-decoration: underline;">
+                            Ke Halaman Login
+                        </a>
+                    `, 'info');
+                }
+            } catch (error) {
+                console.error('Error checking admin:', error);
+            }
+        }
+        
+        // Jalankan saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', checkExistingAdmin);
     </script>
 </body>
 </html>
