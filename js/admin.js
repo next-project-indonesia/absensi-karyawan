@@ -301,3 +301,45 @@ document.addEventListener('DOMContentLoaded', function() {
         loadAttendanceData();
     }
 });
+// Tambahkan di admin.js
+
+// Fungsi untuk membuat user admin baru
+async function createNewAdmin() {
+    try {
+        const nip = prompt('Masukkan NIP untuk admin baru:');
+        const nama = prompt('Masukkan nama admin baru:');
+        const email = `${nip}@absensi.com`;
+        const password = prompt('Masukkan password untuk admin baru:');
+        
+        if (!nip || !nama || !password) {
+            alert('Semua field harus diisi!');
+            return;
+        }
+        
+        // Buat user di Firebase Auth
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Simpan data admin di Firestore
+        await db.collection('users').doc(user.uid).set({
+            uid: user.uid,
+            nip: nip,
+            nama: nama,
+            jabatan: 'Administrator',
+            alamat: 'Kantor Pusat',
+            noWhatsapp: '-',
+            wilayah: 'Pusat',
+            email: email,
+            role: 'admin',
+            passwordDisplay: password,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert(`Admin baru berhasil dibuat!\nEmail: ${email}\nPassword: ${password}`);
+        loadUsers();
+        
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        alert('Gagal membuat admin: ' + error.message);
+    }
+}
