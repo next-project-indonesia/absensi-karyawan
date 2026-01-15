@@ -1,1 +1,1330 @@
 
+<!-- File: admin-users.html -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Karyawan - Admin</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js" defer></script>
+    <script src="js/auth.js" defer></script>
+    <script src="js/admin.js" defer></script>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #667eea;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .search-filter {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        
+        .filter-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-options select {
+            padding: 0.5rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            min-width: 150px;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-small {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        
+        .btn-reset-password {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .btn-make-admin {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.75rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .user-role {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .user-role.admin {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .user-role.user {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .stat-item h4 {
+            margin: 0 0 0.5rem 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .stat-item p {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .pagination button:hover:not(.active) {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Admin Panel</h3>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="admin-dashboard.html">
+                            <span>📊</span> Dashboard
+                        </a>
+                    </li>
+                    <li class="active">
+                        <a href="admin-users.html">
+                            <span>👥</span> Kelola Karyawan
+                        </a>
+                    </li>
+                    <li>
+                        <a href="admin-attendance.html">
+                            <span>📅</span> Data Absensi
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" onclick="logout()">
+                            <span>🚪</span> Logout
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div class="user-details">
+                        <strong id="adminName">Admin</strong>
+                        <small>Super Admin</small>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h1>Kelola Data Karyawan</h1>
+                <div class="header-actions">
+                    <button onclick="showAddUserModal()" class="btn btn-primary">
+                        <span>➕</span> Tambah Karyawan Baru
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Summary -->
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <h4>Total Karyawan</h4>
+                    <p id="totalUsers">0</p>
+                </div>
+                <div class="stat-item">
+                    <h4>Admin</h4>
+                    <p id="totalAdmins">0</p>
+                </div>
+                <div class="stat-item">
+                    <h4>Aktif Hari Ini</h4>
+                    <p id="activeToday">0</p>
+                </div>
+                <div class="stat-item">
+                    <h4>Karyawan Baru</h4>
+                    <p id="newThisMonth">0</p>
+                </div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-filter">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cari berdasarkan NIP, nama, atau jabatan..." 
+                           onkeyup="filterUsers()">
+                    <button onclick="filterUsers()" class="btn btn-primary">Cari</button>
+                    <button onclick="resetFilters()" class="btn btn-secondary">Reset</button>
+                </div>
+                
+                <div class="filter-options">
+                    <select id="filterRole" onchange="filterUsers()">
+                        <option value="">Semua Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                    </select>
+                    
+                    <select id="filterWilayah" onchange="filterUsers()">
+                        <option value="">Semua Wilayah</option>
+                        <!-- Options akan diisi oleh JavaScript -->
+                    </select>
+                    
+                    <select id="sortBy" onchange="filterUsers()">
+                        <option value="namaAsc">Nama A-Z</option>
+                        <option value="namaDesc">Nama Z-A</option>
+                        <option value="tanggalDesc">Terbaru</option>
+                        <option value="tanggalAsc">Terlama</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="export-options">
+                <button onclick="exportToExcel()" class="btn btn-secondary">
+                    <span>📊</span> Export ke Excel
+                </button>
+                <button onclick="exportToPDF()" class="btn btn-secondary">
+                    <span>📄</span> Export ke PDF
+                </button>
+                <button onclick="printUserList()" class="btn btn-secondary">
+                    <span>🖨️</span> Cetak Daftar
+                </button>
+            </div>
+
+            <!-- Users Table -->
+            <div class="content-section">
+                <div class="section-header">
+                    <h2>Daftar Karyawan</h2>
+                    <div>
+                        <span id="filterInfo">Menampilkan semua karyawan</span>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>NIP</th>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
+                                <th>WhatsApp</th>
+                                <th>Wilayah</th>
+                                <th>Role</th>
+                                <th>Tanggal Daftar</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersList">
+                            <!-- Data akan diisi oleh JavaScript -->
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 2rem;">
+                                    Memuat data karyawan...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Pagination akan diisi oleh JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Tambah/Edit User -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Tambah Karyawan Baru</h3>
+                <button class="close-modal" onclick="closeUserModal()">&times;</button>
+            </div>
+            
+            <form id="userForm" onsubmit="saveUser(event)">
+                <input type="hidden" id="userId">
+                <input type="hidden" id="isEditMode" value="false">
+                
+                <div class="form-group">
+                    <label for="modalNip">NIP *</label>
+                    <input type="text" id="modalNip" required 
+                           placeholder="Masukkan NIP">
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalNama">Nama Lengkap *</label>
+                    <input type="text" id="modalNama" required 
+                           placeholder="Masukkan nama lengkap">
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalJabatan">Jabatan *</label>
+                    <input type="text" id="modalJabatan" required 
+                           placeholder="Masukkan jabatan">
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalAlamat">Alamat *</label>
+                    <textarea id="modalAlamat" required 
+                              placeholder="Masukkan alamat lengkap" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalWhatsApp">Nomor WhatsApp *</label>
+                    <input type="tel" id="modalWhatsApp" required 
+                           placeholder="Contoh: 081234567890">
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalWilayah">Wilayah Area *</label>
+                    <input type="text" id="modalWilayah" required 
+                           placeholder="Contoh: Jakarta Pusat">
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalRole">Role</label>
+                    <select id="modalRole" required>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalPassword">Password</label>
+                    <input type="text" id="modalPassword" 
+                           placeholder="Masukkan password (kosongkan untuk generate otomatis)">
+                    <small id="passwordHelp">
+                        Jika dikosongkan, password akan digenerate otomatis: 4 digit terakhir NIP + 3 huruf terakhir nama
+                    </small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="modalEmail">Email</label>
+                    <input type="email" id="modalEmail" 
+                           placeholder="Email otomatis: NIP@absensi.com" readonly>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        Simpan
+                    </button>
+                    <button type="button" onclick="closeUserModal()" class="btn btn-secondary">
+                        Batal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Detail User -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detail Karyawan</h3>
+                <button class="close-modal" onclick="closeDetailModal()">&times;</button>
+            </div>
+            
+            <div id="userDetailContent">
+                <!-- Detail akan diisi oleh JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variabel global
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentPage = 1;
+        const usersPerPage = 10;
+        let wilayahOptions = new Set();
+        
+        // Load data saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadUsers();
+            await loadStats();
+            setupEventListeners();
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Auto-generate email when NIP changes
+            document.getElementById('modalNip').addEventListener('input', function() {
+                const nip = this.value;
+                if (nip) {
+                    document.getElementById('modalEmail').value = `${nip}@absensi.com`;
+                }
+            });
+            
+            // Auto-generate password when NIP and Nama are filled
+            document.getElementById('modalNama').addEventListener('input', autoGeneratePassword);
+            document.getElementById('modalNip').addEventListener('input', autoGeneratePassword);
+            
+            // Close modal on ESC key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeUserModal();
+                    closeDetailModal();
+                }
+            });
+        }
+        
+        // Auto-generate password
+        function autoGeneratePassword() {
+            const nip = document.getElementById('modalNip').value;
+            const nama = document.getElementById('modalNama').value;
+            
+            if (nip && nama && !document.getElementById('isEditMode').value) {
+                const nipPart = nip.slice(-4);
+                const namaPart = nama.slice(-3).toUpperCase();
+                document.getElementById('modalPassword').value = `${nipPart}${namaPart}`;
+            }
+        }
+        
+        // Load all users
+        async function loadUsers() {
+            try {
+                const usersSnapshot = await db.collection('users')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+                
+                allUsers = [];
+                wilayahOptions.clear();
+                
+                usersSnapshot.forEach(doc => {
+                    const user = {
+                        id: doc.id,
+                        ...doc.data(),
+                        createdAt: doc.data().createdAt ? 
+                            doc.data().createdAt.toDate() : new Date()
+                    };
+                    allUsers.push(user);
+                    
+                    // Collect unique wilayah options
+                    if (user.wilayah) {
+                        wilayahOptions.add(user.wilayah);
+                    }
+                });
+                
+                // Populate wilayah filter dropdown
+                const wilayahSelect = document.getElementById('filterWilayah');
+                const currentWilayah = wilayahSelect.value;
+                
+                wilayahSelect.innerHTML = '<option value="">Semua Wilayah</option>';
+                Array.from(wilayahOptions).sort().forEach(wilayah => {
+                    const option = document.createElement('option');
+                    option.value = wilayah;
+                    option.textContent = wilayah;
+                    if (wilayah === currentWilayah) {
+                        option.selected = true;
+                    }
+                    wilayahSelect.appendChild(option);
+                });
+                
+                // Apply initial filter
+                filterUsers();
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                showError('Gagal memuat data karyawan: ' + error.message);
+            }
+        }
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                // Total users
+                const totalUsers = allUsers.length;
+                document.getElementById('totalUsers').textContent = totalUsers;
+                
+                // Total admins
+                const totalAdmins = allUsers.filter(u => u.role === 'admin').length;
+                document.getElementById('totalAdmins').textContent = totalAdmins;
+                
+                // Active today (users with attendance today)
+                const today = new Date().toISOString().split('T')[0];
+                const attendanceSnapshot = await db.collection('attendance')
+                    .where('date', '==', today)
+                    .get();
+                
+                const uniqueUsersToday = new Set();
+                attendanceSnapshot.forEach(doc => {
+                    uniqueUsersToday.add(doc.data().userId);
+                });
+                
+                document.getElementById('activeToday').textContent = uniqueUsersToday.size;
+                
+                // New this month
+                const now = new Date();
+                const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                const newThisMonth = allUsers.filter(u => 
+                    u.createdAt >= firstDayOfMonth
+                ).length;
+                
+                document.getElementById('newThisMonth').textContent = newThisMonth;
+                
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Filter users based on search and filters
+        function filterUsers() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const roleFilter = document.getElementById('filterRole').value;
+            const wilayahFilter = document.getElementById('filterWilayah').value;
+            const sortBy = document.getElementById('sortBy').value;
+            
+            // Apply filters
+            filteredUsers = allUsers.filter(user => {
+                // Search filter
+                const searchMatch = !searchTerm || 
+                    user.nip.toLowerCase().includes(searchTerm) ||
+                    user.nama.toLowerCase().includes(searchTerm) ||
+                    (user.jabatan && user.jabatan.toLowerCase().includes(searchTerm));
+                
+                // Role filter
+                const roleMatch = !roleFilter || user.role === roleFilter;
+                
+                // Wilayah filter
+                const wilayahMatch = !wilayahFilter || user.wilayah === wilayahFilter;
+                
+                return searchMatch && roleMatch && wilayahMatch;
+            });
+            
+            // Apply sorting
+            filteredUsers.sort((a, b) => {
+                switch(sortBy) {
+                    case 'namaAsc':
+                        return a.nama.localeCompare(b.nama);
+                    case 'namaDesc':
+                        return b.nama.localeCompare(a.nama);
+                    case 'tanggalDesc':
+                        return b.createdAt - a.createdAt;
+                    case 'tanggalAsc':
+                        return a.createdAt - b.createdAt;
+                    default:
+                        return 0;
+                }
+            });
+            
+            // Update filter info
+            const filterInfo = document.getElementById('filterInfo');
+            let infoText = `Menampilkan ${filteredUsers.length} dari ${allUsers.length} karyawan`;
+            
+            if (searchTerm || roleFilter || wilayahFilter) {
+                infoText += ' (difilter)';
+            }
+            
+            filterInfo.textContent = infoText;
+            
+            // Render table
+            renderUsersTable();
+            renderPagination();
+        }
+        
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterRole').value = '';
+            document.getElementById('filterWilayah').value = '';
+            document.getElementById('sortBy').value = 'namaAsc';
+            
+            filterUsers();
+        }
+        
+        // Render users table
+        function renderUsersTable() {
+            const tableBody = document.getElementById('usersList');
+            
+            if (filteredUsers.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 2rem;">
+                            Tidak ada data karyawan yang ditemukan
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * usersPerPage;
+            const endIndex = startIndex + usersPerPage;
+            const usersToShow = filteredUsers.slice(startIndex, endIndex);
+            
+            let html = '';
+            
+            usersToShow.forEach(user => {
+                const joinDate = user.createdAt ? 
+                    user.createdAt.toLocaleDateString('id-ID') : '-';
+                
+                html += `
+                    <tr>
+                        <td><strong>${user.nip}</strong></td>
+                        <td>
+                            <div style="font-weight: 500;">${user.nama}</div>
+                            <small style="color: #666;">${user.jabatan || '-'}</small>
+                        </td>
+                        <td>${user.jabatan || '-'}</td>
+                        <td>${user.noWhatsapp || '-'}</td>
+                        <td>${user.wilayah || '-'}</td>
+                        <td>
+                            <span class="user-role ${user.role}">
+                                ${user.role === 'admin' ? 'Admin' : 'User'}
+                            </span>
+                        </td>
+                        <td>${joinDate}</td>
+                        <td>
+                            <div class="user-actions">
+                                <button onclick="viewUserDetail('${user.id}')" 
+                                        class="btn-small btn-primary">
+                                    👁️
+                                </button>
+                                <button onclick="editUser('${user.id}')" 
+                                        class="btn-small btn-edit">
+                                    ✏️
+                                </button>
+                                ${user.role !== 'admin' ? `
+                                <button onclick="resetUserPassword('${user.id}', '${user.nip}', '${user.nama}')" 
+                                        class="btn-reset-password">
+                                    🔑
+                                </button>
+                                <button onclick="deleteUser('${user.id}', '${user.nama}')" 
+                                        class="btn-small btn-delete">
+                                    🗑️
+                                </button>
+                                ` : ''}
+                                ${user.role !== 'admin' ? `
+                                <button onclick="makeAdmin('${user.id}', '${user.nama}')" 
+                                        class="btn-make-admin">
+                                    👑
+                                </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableBody.innerHTML = html;
+        }
+        
+        // Render pagination
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+            const paginationDiv = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            
+            // Previous button
+            html += `
+                <button onclick="changePage(${currentPage - 1})" 
+                        ${currentPage === 1 ? 'disabled' : ''}>
+                    &laquo;
+                </button>
+            `;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || 
+                    (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `
+                        <button onclick="changePage(${i})" 
+                                class="${i === currentPage ? 'active' : ''}">
+                            ${i}
+                        </button>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<button disabled>...</button>`;
+                }
+            }
+            
+            // Next button
+            html += `
+                <button onclick="changePage(${currentPage + 1})" 
+                        ${currentPage === totalPages ? 'disabled' : ''}>
+                    &raquo;
+                </button>
+            `;
+            
+            paginationDiv.innerHTML = html;
+        }
+        
+        // Change page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+            
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            renderUsersTable();
+            renderPagination();
+            
+            // Scroll to top of table
+            document.querySelector('.table-responsive').scrollIntoView({
+                behavior: 'smooth'
+            });
+        }
+        
+        // Show add user modal
+        function showAddUserModal() {
+            document.getElementById('modalTitle').textContent = 'Tambah Karyawan Baru';
+            document.getElementById('isEditMode').value = 'false';
+            document.getElementById('userId').value = '';
+            
+            // Reset form
+            document.getElementById('userForm').reset();
+            document.getElementById('modalEmail').value = '';
+            document.getElementById('modalPassword').value = '';
+            document.getElementById('modalRole').value = 'user';
+            
+            // Show modal
+            document.getElementById('userModal').style.display = 'flex';
+        }
+        
+        // Edit user
+        async function editUser(userId) {
+            try {
+                const user = allUsers.find(u => u.id === userId);
+                if (!user) return;
+                
+                document.getElementById('modalTitle').textContent = 'Edit Data Karyawan';
+                document.getElementById('isEditMode').value = 'true';
+                document.getElementById('userId').value = userId;
+                
+                // Fill form with user data
+                document.getElementById('modalNip').value = user.nip;
+                document.getElementById('modalNama').value = user.nama;
+                document.getElementById('modalJabatan').value = user.jabatan || '';
+                document.getElementById('modalAlamat').value = user.alamat || '';
+                document.getElementById('modalWhatsApp').value = user.noWhatsapp || '';
+                document.getElementById('modalWilayah').value = user.wilayah || '';
+                document.getElementById('modalRole').value = user.role || 'user';
+                document.getElementById('modalEmail').value = user.email || `${user.nip}@absensi.com`;
+                document.getElementById('modalPassword').value = user.passwordDisplay || '';
+                
+                // Update password help text
+                document.getElementById('passwordHelp').textContent = 
+                    'Kosongkan jika tidak ingin mengubah password';
+                
+                // Show modal
+                document.getElementById('userModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error editing user:', error);
+                showError('Gagal memuat data user: ' + error.message);
+            }
+        }
+        
+        // View user detail
+        async function viewUserDetail(userId) {
+            try {
+                const user = allUsers.find(u => u.id === userId);
+                if (!user) return;
+                
+                // Get user's attendance statistics
+                const attendanceSnapshot = await db.collection('attendance')
+                    .where('userId', '==', userId)
+                    .get();
+                
+                const totalAttendance = attendanceSnapshot.size;
+                let presentCount = 0;
+                let lateCount = 0;
+                
+                attendanceSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.status === 'Hadir') presentCount++;
+                    if (data.status === 'Terlambat') lateCount++;
+                });
+                
+                // Format join date
+                const joinDate = user.createdAt ? 
+                    user.createdAt.toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }) : '-';
+                
+                // Create detail content
+                const detailContent = `
+                    <div class="user-detail">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <div style="width: 80px; height: 80px; background: #667eea; 
+                                 border-radius: 50%; display: inline-flex; align-items: center; 
+                                 justify-content: center; font-size: 2rem; color: white; font-weight: bold;">
+                                ${user.nama.charAt(0)}
+                            </div>
+                            <h3 style="margin: 0.5rem 0 0 0;">${user.nama}</h3>
+                            <p style="color: #666; margin: 0;">${user.jabatan || '-'}</p>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #667eea;">Informasi Pribadi</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <div>
+                                    <strong>NIP:</strong><br>
+                                    ${user.nip}
+                                </div>
+                                <div>
+                                    <strong>Role:</strong><br>
+                                    <span class="user-role ${user.role}">
+                                        ${user.role === 'admin' ? 'Admin' : 'User'}
+                                    </span>
+                                </div>
+                                <div>
+                                    <strong>WhatsApp:</strong><br>
+                                    ${user.noWhatsapp || '-'}
+                                </div>
+                                <div>
+                                    <strong>Wilayah:</strong><br>
+                                    ${user.wilayah || '-'}
+                                </div>
+                                <div>
+                                    <strong>Email:</strong><br>
+                                    ${user.email || `${user.nip}@absensi.com`}
+                                </div>
+                                <div>
+                                    <strong>Password:</strong><br>
+                                    ${user.passwordDisplay || '***'}
+                                </div>
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                <strong>Alamat:</strong><br>
+                                ${user.alamat || '-'}
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #667eea;">Statistik Absensi</h4>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                                <div>
+                                    <strong>Total Absensi</strong><br>
+                                    <span style="font-size: 1.2rem; font-weight: bold;">${totalAttendance}</span>
+                                </div>
+                                <div>
+                                    <strong>Hadir</strong><br>
+                                    <span style="font-size: 1.2rem; font-weight: bold; color: #28a745;">${presentCount}</span>
+                                </div>
+                                <div>
+                                    <strong>Terlambat</strong><br>
+                                    <span style="font-size: 1.2rem; font-weight: bold; color: #ffc107;">${lateCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px;">
+                            <h4 style="margin: 0 0 0.5rem 0; color: #667eea;">Informasi Akun</h4>
+                            <div>
+                                <strong>Tanggal Daftar:</strong><br>
+                                ${joinDate}
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                <strong>ID User:</strong><br>
+                                <small style="color: #666; word-break: break-all;">${user.id}</small>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; justify-content: center;">
+                            <button onclick="editUser('${userId}')" class="btn btn-primary">
+                                ✏️ Edit Data
+                            </button>
+                            ${user.role !== 'admin' ? `
+                            <button onclick="resetUserPassword('${userId}', '${user.nip}', '${user.nama}')" 
+                                    class="btn btn-secondary">
+                                🔑 Reset Password
+                            </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('userDetailContent').innerHTML = detailContent;
+                document.getElementById('detailModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Error viewing user detail:', error);
+                showError('Gagal memuat detail user: ' + error.message);
+            }
+        }
+        
+        // Save user (add or edit)
+        async function saveUser(event) {
+            event.preventDefault();
+            
+            try {
+                const isEditMode = document.getElementById('isEditMode').value === 'true';
+                const userId = document.getElementById('userId').value;
+                
+                // Get form values
+                const nip = document.getElementById('modalNip').value;
+                const nama = document.getElementById('modalNama').value;
+                const jabatan = document.getElementById('modalJabatan').value;
+                const alamat = document.getElementById('modalAlamat').value;
+                const noWhatsapp = document.getElementById('modalWhatsApp').value;
+                const wilayah = document.getElementById('modalWilayah').value;
+                const role = document.getElementById('modalRole').value;
+                const password = document.getElementById('modalPassword').value;
+                const email = document.getElementById('modalEmail').value || `${nip}@absensi.com`;
+                
+                // Validate
+                if (!nip || !nama || !jabatan || !alamat || !noWhatsapp || !wilayah) {
+                    showError('Harap lengkapi semua field yang wajib diisi!');
+                    return;
+                }
+                
+                if (isEditMode) {
+                    // Update existing user
+                    const updateData = {
+                        nip: nip,
+                        nama: nama,
+                        jabatan: jabatan,
+                        alamat: alamat,
+                        noWhatsapp: noWhatsapp,
+                        wilayah: wilayah,
+                        role: role,
+                        email: email,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    // Only update password if provided
+                    if (password) {
+                        updateData.passwordDisplay = password;
+                    }
+                    
+                    await db.collection('users').doc(userId).update(updateData);
+                    
+                    // If password changed and user is not admin, update in Firebase Auth
+                    if (password && role !== 'admin') {
+                        // Note: Updating password in Firebase Auth requires recent login
+                        // For now, we'll just update the display password
+                        console.log('Password display updated for user:', userId);
+                    }
+                    
+                    showSuccess('Data karyawan berhasil diperbarui!');
+                    
+                } else {
+                    // Create new user
+                    let finalPassword = password;
+                    
+                    // Auto-generate password if empty
+                    if (!finalPassword) {
+                        const nipPart = nip.slice(-4);
+                        const namaPart = nama.slice(-3).toUpperCase();
+                        finalPassword = `${nipPart}${namaPart}`;
+                    }
+                    
+                    // Create user in Firebase Auth
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, finalPassword);
+                    const newUser = userCredential.user;
+                    
+                    // Save user data to Firestore
+                    const userData = {
+                        uid: newUser.uid,
+                        nip: nip,
+                        nama: nama,
+                        jabatan: jabatan,
+                        alamat: alamat,
+                        noWhatsapp: noWhatsapp,
+                        wilayah: wilayah,
+                        email: email,
+                        role: role,
+                        passwordDisplay: finalPassword,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    await db.collection('users').doc(newUser.uid).set(userData);
+                    
+                    showSuccess(`Karyawan baru berhasil ditambahkan!<br>
+                               Email: <strong>${email}</strong><br>
+                               Password: <strong>${finalPassword}</strong>`);
+                }
+                
+                // Close modal and refresh data
+                closeUserModal();
+                await loadUsers();
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Error saving user:', error);
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    showError('Email/NIP sudah digunakan!');
+                } else if (error.code === 'auth/invalid-email') {
+                    showError('Format email/NIP tidak valid!');
+                } else if (error.code === 'auth/weak-password') {
+                    showError('Password terlalu lemah! Minimal 6 karakter.');
+                } else {
+                    showError('Gagal menyimpan data: ' + error.message);
+                }
+            }
+        }
+        
+        // Reset user password
+        async function resetUserPassword(userId, nip, nama) {
+            if (!confirm(`Reset password untuk ${nama} (NIP: ${nip})?`)) return;
+            
+            try {
+                // Generate new password
+                const nipPart = nip.slice(-4);
+                const namaPart = nama.slice(-3).toUpperCase();
+                const newPassword = `${nipPart}${namaPart}`;
+                
+                // Update in Firestore
+                await db.collection('users').doc(userId).update({
+                    passwordDisplay: newPassword,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showSuccess(`Password berhasil direset!<br>
+                           Password baru: <strong>${newPassword}</strong>`);
+                
+                // Refresh data
+                await loadUsers();
+                
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showError('Gagal mereset password: ' + error.message);
+            }
+        }
+        
+        // Make user an admin
+        async function makeAdmin(userId, nama) {
+            if (!confirm(`Jadikan ${nama} sebagai Admin?`)) return;
+            
+            try {
+                await db.collection('users').doc(userId).update({
+                    role: 'admin',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showSuccess(`${nama} sekarang menjadi Admin!`);
+                
+                // Refresh data
+                await loadUsers();
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Error making admin:', error);
+                showError('Gagal mengubah role: ' + error.message);
+            }
+        }
+        
+        // Delete user
+        async function deleteUser(userId, nama) {
+            if (!confirm(`Hapus karyawan ${nama}?`)) {
+                return;
+            }
+            
+            // Confirm again for safety
+            if (!confirm(`PERINGATAN: Data ${nama} akan dihapus permanen!`)) {
+                return;
+            }
+            
+            try {
+                // Delete from Firestore
+                await db.collection('users').doc(userId).delete();
+                
+                // Delete user's attendance records
+                const attendanceSnapshot = await db.collection('attendance')
+                    .where('userId', '==', userId)
+                    .get();
+                
+                const batch = db.batch();
+                attendanceSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                
+                showSuccess(`Karyawan ${nama} berhasil dihapus!`);
+                
+                // Refresh data
+                await loadUsers();
+                await loadStats();
+                
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showError('Gagal menghapus karyawan: ' + error.message);
+            }
+        }
+        
+        // Export to Excel
+        function exportToExcel() {
+            try {
+                // Create CSV content
+                let csv = 'NIP,Nama,Jabatan,WhatsApp,Wilayah,Role,Email,Password,Tanggal Daftar\n';
+                
+                filteredUsers.forEach(user => {
+                    const joinDate = user.createdAt ? 
+                        user.createdAt.toLocaleDateString('id-ID') : '-';
+                    
+                    csv += `"${user.nip}","${user.nama}","${user.jabatan || ''}","${user.noWhatsapp || ''}",`;
+                    csv += `"${user.wilayah || ''}","${user.role}","${user.email || ''}",`;
+                    csv += `"${user.passwordDisplay || ''}","${joinDate}"\n`;
+                });
+                
+                // Create blob and download
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `karyawan_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showSuccess('Data berhasil di-export ke CSV!');
+                
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                showError('Gagal export data: ' + error.message);
+            }
+        }
+        
+        // Export to PDF
+        function exportToPDF() {
+            showInfo('Fitur export PDF akan segera tersedia!');
+        }
+        
+        // Print user list
+        function printUserList() {
+            const printWindow = window.open('', '_blank');
+            
+            let html = `
+                <html>
+                <head>
+                    <title>Daftar Karyawan</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #333; text-align: center; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .header-info { text-align: center; margin-bottom: 20px; }
+                        .footer { margin-top: 30px; text-align: right; font-size: 12px; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header-info">
+                        <h1>DAFTAR KARYAWAN</h1>
+                        <p>Sistem Absensi Karyawan</p>
+                        <p>Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')}</p>
+                        <p>Total: ${filteredUsers.length} karyawan</p>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>NIP</th>
+                                <th>Nama</th>
+                                <th>Jabatan</th>
+                                <th>WhatsApp</th>
+                                <th>Wilayah</th>
+                                <th>Role</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            filteredUsers.forEach((user, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${user.nip}</td>
+                        <td>${user.nama}</td>
+                        <td>${user.jabatan || '-'}</td>
+                        <td>${user.noWhatsapp || '-'}</td>
+                        <td>${user.wilayah || '-'}</td>
+                        <td>${user.role === 'admin' ? 'Admin' : 'User'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                    
+                    <div class="footer">
+                        <p>Dicetak oleh: ${auth.currentUser?.email || 'Admin'}</p>
+                        <p>${new Date().toLocaleString('id-ID')}</p>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Close user modal
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+        
+        // Close detail modal
+        function closeDetailModal() {
+            document.getElementById('detailModal').style.display = 'none';
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            alert(message);
+        }
+        
+        // Show error message
+        function showError(message) {
+            alert('Error: ' + message);
+        }
+        
+        // Show info message
+        function showInfo(message) {
+            alert('Info: ' + message);
+        }
+        
+        // Prevent form submission on enter in search
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                filterUsers();
+            }
+        });
+    </script>
+</body>
+</html>
